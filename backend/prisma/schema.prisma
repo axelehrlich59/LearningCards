@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Concept {
+  id              String         @id @default(cuid())
+  title           String
+  explanation     String
+  problemSolved   String
+  concreteExample String
+  reviewStatus    ReviewStatus   @default(TO_REVIEW)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  quizQuestions   QuizQuestion[]
+}
+
+model QuizQuestion {
+  id        String   @id @default(cuid())
+  conceptId String
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+}
+
+enum ReviewStatus {
+  TO_REVIEW
+  REVIEWED
+}
