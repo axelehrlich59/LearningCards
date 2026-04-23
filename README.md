@@ -1,80 +1,32 @@
 # LearningCards
 
-Application d'apprentissage structuree pour developpeurs.
+LearningCards est une application conçue pour aider les développeurs à **comprendre réellement les concepts techniques** qu’ils rencontrent dans leur apprentissage ou leur travail.
 
-Le but du projet est de creer des fiches de concepts techniques, de les expliquer avec ses propres mots, d'ajouter des exemples concrets et de preparer des questions de revision.
+L’objectif n’est pas simplement de prendre des notes, mais de transformer un concept flou en **connaissance claire, expliquée et testée**.
 
-## Stack
+Le système repose sur un principe simple :
 
-- React
-- Vite
-- TypeScript
-- Fastify
-- PostgreSQL
-- Prisma
-- Zod
+> Si vous ne pouvez pas expliquer un concept simplement, vous ne l’avez probablement pas encore vraiment compris.
 
-## Structure
+LearningCards structure l’apprentissage autour de l’explication, des exemples concrets et de la révision.
 
-```txt
-frontend/  Application React
-backend/   API Fastify, Prisma, schemas Zod
-```
+---
 
-## Installation
+# Vision
 
-```bash
-npm install
-```
+Les développeurs rencontrent constamment des concepts :
 
-## Variables d'environnement
+- SQL index
+- transactions
+- event loop
+- dependency injection
+- rate limiting
+- caching
+- etc.
 
-Copier le fichier d'exemple :
+Souvent, ces concepts sont :
+- lus rapidement
+- partiellement compris
+- puis oubliés.
 
-```bash
-cp backend/.env.example backend/.env
-```
-
-Puis adapter `DATABASE_URL` dans `backend/.env`.
-
-## Commandes
-
-Lancer le frontend :
-
-```bash
-npm run dev:web
-```
-
-Lancer l'API :
-
-```bash
-npm run dev:api
-```
-
-Generer le client Prisma :
-
-```bash
-npm run db:generate
-```
-
-Lancer les migrations :
-
-```bash
-npm run db:migrate
-```
-
-Verifier le projet :
-
-```bash
-npm run typecheck
-npm run lint
-```
-
-## MVP
-
-- Creer un concept technique
-- Lister les concepts
-- Voir le detail d'un concept
-- Modifier et supprimer un concept
-- Ajouter des questions de quiz
-- Marquer un concept comme a reviser ou revise
+LearningCards vise à résoudre ce problème en imposant un cycle d’apprentissage structuré :

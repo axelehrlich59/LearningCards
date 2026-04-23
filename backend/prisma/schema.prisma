@@ -13,30 +13,52 @@ datasource db {
 }
 
 model Concept {
-  id              String         @id @default(cuid())
-  title           String
-  explanation     String
-  problemSolved   String
-  concreteExample String
-  reviewStatus    ReviewStatus   @default(TO_REVIEW)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                  String        @id @default(cuid())
+  title               String
+  personalExplanation String
+  problemSolved       String
+  level               ConceptLevel  @default(SEEN)
+  nextReviewAt        DateTime?
+  lastReviewedAt      DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  quizQuestions   QuizQuestion[]
+  examples            Example[]
+  interactions        Interaction[]
 }
 
-model QuizQuestion {
+model Example {
   id        String   @id @default(cuid())
+  title     String?
+  content   String
   conceptId String
-  question  String
-  answer    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 }
 
-enum ReviewStatus {
-  TO_REVIEW
-  REVIEWED
+model Interaction {
+  id        String          @id @default(cuid())
+  type      InteractionType
+  prompt    String
+  answer    String?
+  conceptId String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  concept   Concept         @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+}
+
+enum ConceptLevel {
+  SEEN
+  UNDERSTOOD
+  USED
+  EXPLAINED
+}
+
+enum InteractionType {
+  FLASHCARD
+  QUIZ
+  PROMPT
 }

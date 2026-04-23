@@ -3,7 +3,8 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { ZodError } from "zod";
 import { conceptsRoutes } from "./routes/concepts.routes";
-import { quizQuestionsRoutes } from "./routes/quiz-questions.routes";
+import { examplesRoutes } from "./routes/examples.routes";
+import { interactionsRoutes } from "./routes/interactions.routes";
 
 const app = Fastify({
   logger: true,
@@ -30,7 +31,8 @@ app.get("/health", async () => {
 });
 
 await app.register(conceptsRoutes);
-await app.register(quizQuestionsRoutes);
+await app.register(examplesRoutes);
+await app.register(interactionsRoutes);
 
 const port = Number(process.env["API_PORT"] ?? 3000);
 
