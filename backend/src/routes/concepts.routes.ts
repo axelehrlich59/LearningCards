@@ -1,33 +1,55 @@
 import type { FastifyInstance } from "fastify";
-import { ZodError } from "zod";
+import { Prisma } from "../generated/prisma/client";
+import { isRecordNotFoundError } from "../lib/prisma-errors";
+import { getNextReviewDate } from "../lib/review-schedule";
 import { prisma } from "../prisma";
 import {
   conceptIdParamsSchema,
   createConceptSchema,
+  listConceptsQuerySchema,
   reviewConceptSchema,
   updateConceptSchema,
 } from "../schemas/concepts.schema";
 
-const reviewDelayByLevel = {
-  SEEN: 1,
-  UNDERSTOOD: 3,
-  USED: 7,
-  EXPLAINED: 14,
+const conceptInclude = {
+  examples: { orderBy: { createdAt: "asc" } },
+  interactions: { orderBy: { createdAt: "asc" } },
 } as const;
 
-type ConceptLevel = keyof typeof reviewDelayByLevel;
-
-function getNextReviewDate(level: ConceptLevel) {
-  const nextDate = new Date();
-  nextDate.setDate(nextDate.getDate() + reviewDelayByLevel[level]);
-  return nextDate;
-}
-
 export async function conceptsRoutes(app: FastifyInstance) {
-  app.get("/concepts", async () => {
+  app.get("/concepts", async (request) => {
+    const { due, level, search } = listConceptsQuerySchema.parse(request.query);
+    const now = new Date();
+    const filters: Prisma.ConceptWhereInput[] = [];
+
+    if (level) {
+      filters.push({ level });
+    }
+
+    if (due === "true") {
+      filters.push({
+        OR: [{ nextReviewAt: null }, { nextReviewAt: { lte: now } }],
+      });
+    }
+
+    if (due === "false") {
+      filters.push({ nextReviewAt: { gt: now } });
+    }
+
+    if (search) {
+      filters.push({
+        OR: [
+          { title: { contains: search, mode: "insensitive" } },
+          { personalExplanation: { contains: search, mode: "insensitive" } },
+          { problemSolved: { contains: search, mode: "insensitive" } },
+        ],
+      });
+    }
+
     return prisma.concept.findMany({
+      where: filters.length > 0 ? { AND: filters } : undefined,
       orderBy: { updatedAt: "desc" },
-      include: { examples: true, interactions: true },
+      include: conceptInclude,
     });
   });
 
@@ -41,7 +63,7 @@ export async function conceptsRoutes(app: FastifyInstance) {
         examples: examples ? { create: examples } : undefined,
         interactions: interactions ? { create: interactions } : undefined,
       },
-      include: { examples: true, interactions: true },
+      include: conceptInclude,
     });
 
     return reply.code(201).send(concept);
@@ -51,7 +73,7 @@ export async function conceptsRoutes(app: FastifyInstance) {
     const { id } = conceptIdParamsSchema.parse(request.params);
     const concept = await prisma.concept.findUnique({
       where: { id },
-      include: { examples: true, interactions: true },
+      include: conceptInclude,
     });
 
     if (!concept) {
@@ -73,9 +95,13 @@ export async function conceptsRoutes(app: FastifyInstance) {
       return await prisma.concept.update({
         where: { id },
         data: body,
-        include: { examples: true, interactions: true },
+        include: conceptInclude,
       });
-    } catch {
+    } catch (error) {
+      if (!isRecordNotFoundError(error)) {
+        throw error;
+      }
+
       return reply.code(404).send({ message: "Concept introuvable" });
     }
   });
@@ -92,9 +118,13 @@ export async function conceptsRoutes(app: FastifyInstance) {
           lastReviewedAt: new Date(),
           nextReviewAt: getNextReviewDate(level),
         },
-        include: { examples: true, interactions: true },
+        include: conceptInclude,
       });
-    } catch {
+    } catch (error) {
+      if (!isRecordNotFoundError(error)) {
+        throw error;
+      }
+
       return reply.code(404).send({ message: "Concept introuvable" });
     }
   });
@@ -105,7 +135,11 @@ export async function conceptsRoutes(app: FastifyInstance) {
     try {
       await prisma.concept.delete({ where: { id } });
       return reply.code(204).send();
-    } catch {
+    } catch (error) {
+      if (!isRecordNotFoundError(error)) {
+        throw error;
+      }
+
       return reply.code(404).send({ message: "Concept introuvable" });
     }
   });
@@ -116,11 +150,7 @@ export async function conceptsRoutes(app: FastifyInstance) {
         OR: [{ nextReviewAt: null }, { nextReviewAt: { lte: new Date() } }],
       },
       orderBy: { nextReviewAt: "asc" },
-      include: { examples: true, interactions: true },
+      include: conceptInclude,
     });
   });
-}
-
-export function isZodError(error: unknown): error is ZodError {
-  return error instanceof ZodError;
 }

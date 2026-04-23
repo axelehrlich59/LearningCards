@@ -34,6 +34,12 @@ export const createConceptSchema = z.object({
     .optional(),
 });
 
+export const listConceptsQuerySchema = z.object({
+  level: conceptLevelSchema.optional(),
+  due: z.enum(["true", "false"]).optional(),
+  search: z.string().trim().min(1).optional(),
+});
+
 export const updateConceptSchema = z.object({
   title: z.string().trim().min(1, "Le titre est obligatoire").optional(),
   personalExplanation: z

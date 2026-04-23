@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { isRecordNotFoundError } from "../lib/prisma-errors";
 import { prisma } from "../prisma";
 import {
   conceptExampleParamsSchema,
@@ -41,7 +42,11 @@ export async function examplesRoutes(app: FastifyInstance) {
         where: { id },
         data: body,
       });
-    } catch {
+    } catch (error) {
+      if (!isRecordNotFoundError(error)) {
+        throw error;
+      }
+
       return reply.code(404).send({ message: "Exemple introuvable" });
     }
   });
@@ -52,7 +57,11 @@ export async function examplesRoutes(app: FastifyInstance) {
     try {
       await prisma.example.delete({ where: { id } });
       return reply.code(204).send();
-    } catch {
+    } catch (error) {
+      if (!isRecordNotFoundError(error)) {
+        throw error;
+      }
+
       return reply.code(404).send({ message: "Exemple introuvable" });
     }
   });

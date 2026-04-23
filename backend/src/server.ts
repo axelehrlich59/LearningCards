@@ -2,6 +2,7 @@ import "dotenv/config";
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { ZodError } from "zod";
+import { isDatabaseConnectionError } from "./lib/prisma-errors";
 import { conceptsRoutes } from "./routes/concepts.routes";
 import { examplesRoutes } from "./routes/examples.routes";
 import { interactionsRoutes } from "./routes/interactions.routes";
@@ -19,6 +20,12 @@ app.setErrorHandler((error, _request, reply) => {
     return reply.code(400).send({
       message: "Donnees invalides",
       errors: error.issues,
+    });
+  }
+
+  if (isDatabaseConnectionError(error)) {
+    return reply.code(503).send({
+      message: "Base de donnees indisponible",
     });
   }
 
